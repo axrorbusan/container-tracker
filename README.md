@@ -31,6 +31,18 @@ pytest
   and a container needs a vessel before it can be loaded.
 - Container list with filters (`status`, `vessel_id`, `q`) and pagination (`limit`, `offset`).
 
+## Ask questions (`/ask`)
+
+```bash
+curl -X POST localhost:8000/ask -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"question":"which containers are at sea?"}'
+```
+
+A small router picks a tool (container history, list by status, counts) or falls back to BM25 search
+over the event history. If `ANTHROPIC_API_KEY` is set, an LLM rewrites the facts into a short answer;
+without it the app still works and answers straight from the data. `tests/test_assistant.py` has an eval
+set (question -> expected tool and answer) so changes to the router can be checked.
+
 ## Endpoints
 
 | Method | Path | Role |
@@ -41,6 +53,7 @@ pytest
 | GET | `/containers?status=&vessel_id=&q=&limit=&offset=` | any user |
 | GET | `/containers/{number}` (with event history) | any user |
 | POST | `/containers/{number}/events` | operator |
+| POST | `/ask` (plain-language questions) | any user |
 | GET | `/health` | public |
 
 ## Example
@@ -55,10 +68,10 @@ curl -X POST localhost:8000/containers -H "authorization: Bearer $TOKEN" -H 'con
 
 ## Tests
 
-`pytest` runs 11 tests: auth, roles, validation, full lifecycle, pagination and filters.
+`pytest` runs 21 tests: auth, roles, validation, full lifecycle, pagination and filters, plus a small eval set for `/ask`.
 
 ## Next steps
 
 - Alembic migrations (tables are created at startup for now).
-- Question-answering over a container's history with my RAG code.
+- Swap the BM25 retriever for embeddings + a vector DB (pgvector).
 - Background job for daily status reports.

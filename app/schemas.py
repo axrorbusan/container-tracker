@@ -90,3 +90,13 @@ class Page(BaseModel):
     limit: int
     offset: int
     items: list[ContainerOut]
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+
+
+class AskResponse(BaseModel):
+    answer: str
+    tool: str
+    sources: list[str]

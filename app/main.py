@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from . import models, schemas
+from . import assistant, models, schemas
 from .database import Base, engine, get_db
 from .security import create_token, current_user, hash_password, require_operator, verify_password
 
@@ -144,3 +144,11 @@ def add_event(number: str, body: schemas.EventCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(event)
     return event
+
+
+# ---------- assistant ----------
+@app.post("/ask", response_model=schemas.AskResponse, tags=["assistant"])
+def ask(body: schemas.AskRequest, db: Session = Depends(get_db), _=Depends(current_user)):
+    """Ask in plain language, e.g. 'where is MSKU1234567?' or 'which containers are at sea?'"""
+    a = assistant.ask(db, body.question)
+    return schemas.AskResponse(answer=a.answer, tool=a.tool, sources=a.sources)
